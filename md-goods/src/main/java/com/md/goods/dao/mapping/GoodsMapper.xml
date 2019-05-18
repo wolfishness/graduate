@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.md.goods.dao.GoodsMapper">
+
+	<!-- 通用查询映射结果 -->
+
+	<resultMap id="BaseResultMap" type="com.md.goods.model.Goods">
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="goodsCode" property="goodsCode" />
+		<result column="brandId" property="brandId" />
+		<result column="unit" property="unit" />
+		<result column="paramItems" property="paramItems" />
+		<result column="specItems" property="specItems" />
+		<result column="images" property="images" />
+		<result column="createTime" property="createTime" />
+		<result column="marketPrice" property="marketPrice" />
+		<result column="price" property="price" />
+		<result column="detail" property="detail" />
+		<result column="idDel" property="idDel" />
+	</resultMap>
+
+	<select id="getMaxgoodsCode" resultType="java.lang.String">
+		select max(goodsCode) from shop_goods
+		where goodsCode like CONCAT(#{currentTime},"%")
+	</select>
+
+	<select id="goodsList" resultType="map">
+		SELECT B.name AS goodgoodsCodeame,A.id AS id,
+		(select name from shop_product where shop_product.id = A.productId) AS
+		productName
+		FROM shop_price_tag AS A LEFT JOIN shop_goods AS B
+		ON
+		A.goodsId=B.id
+		WHERE 1=1
+		<if test="brandId != null and brandId != ''">
+			AND B.brandId=#{brandId}
+		</if>
+		<if test="goodgoodsCodeame != null and goodgoodsCodeame != ''">
+			AND B.name LIKE CONCAT("%",#{goodgoodsCodeame},"%")
+		</if>
+		<if test="categoryId != null and categoryId != ''">
+			AND B.id in (SELECT goodsId FROM shop_category_relation
+			WHERE categoryId=#{categoryId})
+		</if>
+		ORDER BY B.name
+	</select>
+
+	<select id="findBindPriceTag" resultType="map">
+		SELECT * FROM shop_price_tag WHERE id
+		IN
+		<foreach item="item" collection="ids" index="index" open="("
+			separator="," close=")">#{item}</foreach>
+		ORDER BY goodsId,productId
+	</select>
+
+	<select id="findGoodsBygoodsCode" resultType="map">
+		select * from shop_goods
+		where goodsCode=#{goodsCode}
+	</select>
+
+	<select id="selectByCateOnStatus" resultType="map">
+		select sg.*
+		from shop_goods AS sg
+		INNER JOIN shop_category_relation AS scr on scr.goodsid=sg.id
+		INNER JOIN shop_category AS sc ON scr.categoryId = sc.id 
+		WHERE NOT EXISTS(select slg.id from shop_lower_goods slg where
+		slg.goodsId=sg.id AND slg.goodsCode=sg.goodsCode)
+		and sc.id = #{categoryId}
+		ORDER BY sg.id
+		LIMIT #{begin}, 8
+	</select>
+
+	<select id="selectByTag" resultType="map">
+		SELECT sg.* from shop_goods sg
+		INNER JOIN shop_tag_relation str ON sg.id=str.goodsId
+		LEFT JOIN shop_tag st
+		ON str.tagId=st.id
+		where NOT EXISTS(select slg.id from shop_lowergoods slg where
+		slg.goodsId=sg.id AND slg.shopId=#{shopId} AND slg.goodsCode=sg.goodsCode)
+		and st.id = #{tagId} GROUP BY sg.id LIMIT #{begin}, 8
+	</select>
+
+	<select id="selectByName" resultType="map">
+		SELECT sg.* from shop_goods sg
+		WHERE NOT EXISTS(select slg.id from shop_lower_goods slg where
+		slg.goodsId=sg.id AND slg.goodsCode=sg.goodsCode)
+		and sg.name like CONCAT('%',#{name},'%') GROUP BY sg.id LIMIT #{begin}, 8
+	</select>
+</mapper>
