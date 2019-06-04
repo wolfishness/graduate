@@ -5,7 +5,7 @@
 	<!-- 通用查询映射结果 -->
 	<resultMap id="BaseResultMap" type="com.md.order.model.Order">
 		<id column="id" property="id" />
-		<result column="goodsCode" property="goodsCode" />
+		<result column="serial" property="serial" />
 		<result column="createTime" property="createTime" />
 		<result column="gainsTime" property="gainsTime" />
 		<result column="payTime" property="payTime" />
@@ -24,4 +24,13 @@
 		<result column="diliveryId" property="diliveryId" />
 		<result column="refundStatus" property="refundStatus" />
 	</resultMap>
+
+
+	<select id="selectOneMonth" resultType="String">
+
+		SELECT SUM(soi.quantity) FROM shop_order_item AS soi
+		INNER JOIN (SELECT id FROM shop_order where payTime LIKE CONCAT(#{payTime},"%")) as
+		soId ON soId.id = soi.orderId
+		WHERE soi.goodsId=#{goodsId}
+	</select>
 </mapper>

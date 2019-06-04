@@ -21,10 +21,6 @@ public class Product {
 	private BigDecimal marketPrice;
 	// 销售价格
 	private BigDecimal price;
-	// 商品条码
-	private String barcode;
-	// 规格项编号
-	private String specItems;
 	// 规格商品图片
 	private String image;
 	// 规格商品编号
@@ -81,22 +77,6 @@ public class Product {
 
 	public void setPrice(BigDecimal price) {
 		this.price = price;
-	}
-
-	public String getBarcode() {
-		return barcode;
-	}
-
-	public void setBarcode(String barcode) {
-		this.barcode = barcode;
-	}
-
-	public String getSpecItems() {
-		return specItems;
-	}
-
-	public void setSpecItems(String specItems) {
-		this.specItems = specItems;
 	}
 
 	public String getImage() {

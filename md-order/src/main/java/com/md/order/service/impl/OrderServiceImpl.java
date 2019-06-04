@@ -1,12 +1,15 @@
 package com.md.order.service.impl;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
 import org.apache.ibatis.session.RowBounds;
+import org.apache.tomcat.jni.Time;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +36,27 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 			wrapper.eq("memberId", memberId);
 		}
 		if (ToolUtil.isNotEmpty(status)) {
-			wrapper.eq("status", status);
+			if (status != 10) {
+				wrapper.eq("status", status);
+			}
+			
+		}else {
+			wrapper.ne("status", OrderStatus.DELETE.getCode());
+		}
+		wrapper.orderBy("createTime",false);
+		Integer begin = (index - 1) * Page.PAGESIZE.getCode();
+		RowBounds rowBounds = new RowBounds(begin,Page.PAGESIZE.getCode());
+		return orderMapper.selectPage(rowBounds, wrapper);
+	}
+	
+	@Override
+	public List<Order> findShopListByPage(Integer status, Integer index) {
+		Wrapper<Order> wrapper = new EntityWrapper<>();
+		if (ToolUtil.isNotEmpty(status)) {
+			if (status != 10) {
+				wrapper.eq("status", status);
+			}
+			
 		}else {
 			wrapper.ne("status", OrderStatus.DELETE.getCode());
 		}
@@ -55,5 +78,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 	@Override
 	public void add(Order order) {
 		orderMapper.insert(order);
+	}
+	
+	@Override
+	public String findSumForMonth(Long goodsId){
+		Date date = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
+		String sum = orderMapper.selectOneMonth(dateFormat.format(date), goodsId);
+		if (ToolUtil.isNotEmpty(sum)) {
+			return sum;
+		}
+		return "0";
 	}
 }

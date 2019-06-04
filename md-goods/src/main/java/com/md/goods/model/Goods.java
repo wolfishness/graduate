@@ -1,11 +1,13 @@
 package com.md.goods.model;
 
+import java.awt.Image;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
 import com.baomidou.mybatisplus.enums.IdType;
+import com.mysql.jdbc.Blob;
 
 @TableName("shop_goods")
 public class Goods {
@@ -20,12 +22,6 @@ public class Goods {
 	private String goodsCode;
 	// 品牌编号
 	private Long brandId;
-	// 商品单位
-	private String unit;
-	// 商品参数
-	private String paramItems;
-	// 商品规格
-	private String specItems;
 	// 商品图片组
 	private String images;
 	// 创建时间
@@ -38,6 +34,7 @@ public class Goods {
 	private String detail;
 	// 是否删除
 	private boolean isDel;
+	
 
 	public Long getId() {
 		return id;
@@ -69,30 +66,6 @@ public class Goods {
 
 	public void setBrandId(Long brandId) {
 		this.brandId = brandId;
-	}
-
-	public String getUnit() {
-		return unit;
-	}
-
-	public void setUnit(String unit) {
-		this.unit = unit;
-	}
-
-	public String getParamItems() {
-		return paramItems;
-	}
-
-	public void setParamItems(String paramItems) {
-		this.paramItems = paramItems;
-	}
-
-	public String getSpecItems() {
-		return specItems;
-	}
-
-	public void setSpecItems(String specItems) {
-		this.specItems = specItems;
 	}
 
 	public String getImages() {

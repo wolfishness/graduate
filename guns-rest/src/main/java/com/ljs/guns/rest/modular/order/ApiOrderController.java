@@ -1,6 +1,7 @@
 package com.ljs.guns.rest.modular.order;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,16 +35,19 @@ import com.md.goods.service.IPriceTagService;
 import com.md.goods.service.IProductService;
 import com.md.member.service.IMemberService;
 import com.md.order.constant.OrderStatus;
+import com.md.order.model.AfterSaleApply;
 import com.md.order.model.Evaluation;
 import com.md.order.model.Order;
 import com.md.order.model.OrderItem;
 import com.md.order.model.RefundApply;
+import com.md.order.service.IAfterSaleApplyService;
 import com.md.order.service.IEvaluationService;
 import com.md.order.service.IOrderItemService;
 import com.md.order.service.IOrderService;
 import com.md.order.service.IRefundApplyService;
 
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @RestController
 @RequestMapping("/order")
@@ -77,6 +82,9 @@ public class ApiOrderController {
 
 	@Resource
 	IMemberService memberService;
+	
+	@Resource
+	IAfterSaleApplyService afterSaleApplyService;
 
 	@ApiOperation(value = "添加评价", notes = "添加评价")
 	@RequestMapping(value = "/addEvaluation", method = RequestMethod.POST)
@@ -122,6 +130,35 @@ public class ApiOrderController {
 		if (orderResult.size() > 0) {
 			for (Order order : orderResult) {
 				List<Map<String, Object>> itemResult = orderItemService.getListByOrderId(order.getId());
+				for (Map<String, Object> map : itemResult) {
+					Product product = productService.selectById(Long.parseLong(map.get("productId").toString()));
+					map.put("image", product.getImage());
+					map.put("skuName", product.getName());
+					map.put("goodsSize", product.getGoodsSize());
+				}
+				order.setItemObject(itemResult);
+			}
+		}
+		jb.put("data", orderResult);
+		return ResponseEntity.ok(jb);
+	}
+	
+	@ApiOperation(value = "获取商家订单列表", notes = "获取订单列表")
+	@RequestMapping(value = "/getShopOrderList", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseEntity<?> getShopOrderList(@RequestBody OrderRequest orderRequest) {
+		JSONObject jb = new JSONObject();
+
+		List<Order> orderResult = orderService.findShopListByPage( orderRequest.getStatus(),orderRequest.getIndex());
+		if (orderResult.size() > 0) {
+			for (Order order : orderResult) {
+				List<Map<String, Object>> itemResult = orderItemService.getListByOrderId(order.getId());
+				for (Map<String, Object> map : itemResult) {
+					Product product = productService.selectById(Long.parseLong(map.get("productId").toString()));
+					map.put("image", product.getImage());
+					map.put("skuName", product.getName());
+					map.put("goodsSize", product.getGoodsSize());
+				}
 				order.setItemObject(itemResult);
 			}
 		}
@@ -160,14 +197,20 @@ public class ApiOrderController {
 		// 订单状态判断 需要新增
 		order.setStatus(orderRequest.getStatus());
 		orderService.updateById(order);
+		
 		if (orderRequest.getStatus() == OrderStatus.WAIT_EVALUATE.getCode()) {
 			order.setGainsTime(DateUtil.format(new Date()));
 			orderService.updateById(order);
 		}
+		
 		if (orderRequest.getStatus() == OrderStatus.TRADE_CLOSE.getCode()) {
 			for (OrderItem item : orderItemService.findByOrderId(orderRequest.getOrderId())) {
 				priceTagService.addInventory(item.getProductId(), item.getQuantity());
 			}
+		}
+		
+		if (order.getStatus() == OrderStatus.WAIT_SEND.getCode()) {
+			order.setPayTime(DateUtil.format(new Date()));
 		}
 
 		jb.put("data", "success");
@@ -182,6 +225,13 @@ public class ApiOrderController {
 		Order order = orderService.selectById(orderRequest.getOrderId());
 		if (ToolUtil.isNotEmpty(order)) {
 			List<Map<String, Object>> itemResult = orderItemService.getListByOrderId(order.getId());
+			for (Map<String, Object> map : itemResult) {
+				Product product = productService.selectById(Long.parseLong(map.get("productId").toString()));
+				map.put("image", product.getImage());
+				map.put("skuName", product.getName());
+				map.put("goodsSize", product.getGoodsSize());
+			}
+			
 			order.setItemObject(itemResult);
 		}
 		jb.put("data", order);
@@ -221,8 +271,8 @@ public class ApiOrderController {
 	public ResponseEntity<?> submitOrder(@RequestBody OrderRequest orderRequest) throws Exception {
 		List<Long> idList = new ArrayList<>();
 		System.out.println("批量提交订单:" + JSON.toJSONString(orderRequest));
-		// String sn =new Date().getTime()+ String.valueOf((int)((Math.random()*
-		// 9 + 1) * 100000));
+		String serial =new Date().getTime()+ String.valueOf((int)((Math.random()*
+		 9 + 1) * 100000));
 		for (Order order : orderRequest.getOrderList()) {
 			// 先判断库存是否足够
 			for (OrderItem item : order.getOrderItems()) {
@@ -241,7 +291,9 @@ public class ApiOrderController {
 				cartService.updateById(cart);
 				orderRequest.setCart(false);
 			}
+			order.setSerial(serial);
 			// order.setSn(sn);
+			order.setCreateTime(DateUtil.format(new Date()));
 			orderService.add(order);
 			idList.add(order.getId());
 			for (OrderItem item : order.getOrderItems()) {
@@ -249,15 +301,16 @@ public class ApiOrderController {
 				if (pricetay.getInventory() < item.getQuantity()) {
 
 				}
+				item.setGoodsId(pricetay.getGoodsId());
 				PriceTag priceTag = priceTagService.reduceInventory(item.getProductId(), item.getQuantity());
 				if (priceTag.getInventory() <= priceTag.getThreshold()) {
 					Product product = productService.selectById(priceTag.getProductId());
-
+					
 				}
 				item.setOrderId(order.getId());
 				// by ljs 20190219 将UnitPrice价格修改为促销政策的价格
-				item.setUnitPrice(item.getActualPrice().divide(BigDecimal.valueOf(item.getQuantity())));
-				item.setActualPrice(item.getActualPrice());
+				item.setActualPay(item.getActualPrice().multiply(new BigDecimal(item.getQuantity())));
+				item.setOriginalPay(item.getUnitPrice().multiply(new BigDecimal(item.getQuantity())));
 				orderItemService.insert(item);
 				CartItem cartItem = cartItemService.findByPriceTagId(priceTag.getId(), cart.getId());
 				if (ToolUtil.isNotEmpty(cartItem)) {
@@ -269,6 +322,86 @@ public class ApiOrderController {
 		return ResponseEntity.ok(idList);
 	}
 	
+	/**
+	 * by ljs	20190219
+	 * @param orderId
+	 * @param orderItemId
+	 * @return
+	 */
+	@ApiOperation(value = "新增售后处理单", notes = "新增售后处理单")
+	@RequestMapping(value = "/insertAfterSaleApply", method = RequestMethod.POST)
+	public ResponseEntity<?> insertAfterSaleApply(@RequestBody OrderRequest orderRequest){
+		
+		System.out.println(orderRequest.getOrderId());
+		System.out.println(orderRequest.getOrderItemId());
+		JSONObject jb = new JSONObject();
+		
+		//by ljs 20190219 	更新明细表售后状态
+		OrderItem orderItem = orderItemService.selectById(orderRequest.getOrderItemId());
+		if (orderItem.getRefundStatus() == 3) {
+			jb.put("data", "error");
+			jb.put("errcode", -1);
+			jb.put("errmsg", "存在未处理的售后申请");
+			return ResponseEntity.ok(jb);
+		}
+		orderItem.setRefundQuantity(orderItem.getQuantity());
+		orderItem.setRefundAmount(orderItem.getOriginalPay());
+		orderItem.setRefundStatus(3);
+		try {
+			orderItemService.updateById(orderItem);
+		} catch (Exception e) {
+			System.out.println("更新明细表售后状态失败！");
+		}
+		//by ljs 20190219 	更新主表售后状态
+		Order order = orderService.selectById(orderRequest.getOrderId());
+		order.setStatus(9);
+		order.setRefundStatus(3);
+		try {
+			System.out.println(order.getStatus());
+			orderService.updateById(order);
+		} catch (Exception e) {
+			System.out.println("更新主表售后状态失败！");
+		}
+		//by ljs 20190219 	查询对应的条形码
+		long productId = orderItemService.selectById(orderRequest.getOrderItemId()).getProductId();
+		String goodsCode = productService.selectById(productId).getGoodsCode();
+		//by ljs 20190219 	插入数据到售后申请单
+		AfterSaleApply afterSaleApply = new AfterSaleApply();
+		afterSaleApply.setOrderId(orderRequest.getOrderId());
+		afterSaleApply.setOrderItemId(orderRequest.getOrderItemId());
+		afterSaleApply.setGoodsCode(goodsCode);
+		//by ljs 20190219 	增加申请原因
+		afterSaleApply.setRefundQuantity(orderItem.getQuantity());
+		afterSaleApply.setRefundAmount(orderItem.getOriginalPay());
+		afterSaleApply.setStatus(3);
+		afterSaleApply.setCreateTime(DateUtil.format(new Date()));
+		System.out.println(afterSaleApply);
+		afterSaleApplyService.insert(afterSaleApply);
+		try {
+			afterSaleApplyService.insert(afterSaleApply);
+
+			jb.put("data", afterSaleApply);
+			jb.put("errcode", 0);
+			jb.put("errmsg", "0");
+		} catch (Exception e) {
+			System.out.println("插入数据到售后申请单失败！");
+		}
+		return ResponseEntity.ok(jb);
+	}
 	
+	
+	@ApiOperation(value = "售后处理单处理", notes = "售后处理单处理")
+	@RequestMapping(value = "/updateAfterSaleApply", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseEntity<?> updateAfterSaleApply(@RequestBody OrderRequest orderRequest) {
+		
+		AfterSaleApply afterSaleApply = null;
+		JSONObject jb = new JSONObject();
+		Date date = new Date();       
+		Timestamp manageTime = new Timestamp(date.getTime());
+		
+		return ResponseEntity.ok(null);
+	}
+
 
 }

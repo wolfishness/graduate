@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- by ljs 20190218 添加售后申请表的返回值类型 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.md.order.dao.AfterSaleApplyMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap"
+		type="com.md.order.model.AfterSaleApply">
+		<id column="id" property="id" />
+		<result column="orderId" property="orderId" />
+		<result column="orderItemId" property="orderItemId" />
+		<result column="goodsCode" property="goodsCode" />
+		<result column="refundQuantity" property="refundQuantity" />
+		<result column="refundAmount" property="refundAmount" />
+		<result column="status" property="status" />
+		<result column="detail" property="detail" />
+		<result column="createTime" property="createTime" />
+		<result column="manager" property="manager" />
+		<result column="manageTime" property="manageTime" />
+		<result column="payer" property="payer" />
+		<result column="payTime" property="payTime" />
+		<result column="confirm" property="confirm" />
+	</resultMap>
+	
+</mapper>

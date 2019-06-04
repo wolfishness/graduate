@@ -13,4 +13,8 @@ public interface IOrderService extends IService<Order>{
 
 	void add(Order order);
 
+	String findSumForMonth(Long goodsId);
+
+	List<Order> findShopListByPage(Integer status, Integer index);
+
 }

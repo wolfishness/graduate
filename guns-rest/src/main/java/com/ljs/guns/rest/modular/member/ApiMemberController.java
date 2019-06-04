@@ -5,23 +5,17 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import org.apache.ibatis.annotations.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
-import com.ljs.guns.core.base.controller.BaseController;
-import com.ljs.guns.core.exception.ApiException;
 import com.ljs.guns.core.util.HttpRequest;
 import com.ljs.guns.core.util.ToolUtil;
-import com.ljs.guns.rest.common.exception.BizExceptionEnum;
-import com.ljs.guns.rest.modular.member.dto.FavoriteRequest;
 import com.ljs.guns.rest.modular.member.dto.MemberRequest;
 import com.md.cart.service.ICartItemService;
 import com.md.cart.service.ICartService;
@@ -52,52 +46,10 @@ public class ApiMemberController{
 
 	
 	@ApiOperation(value = "自动登录", notes = "自动登录")
-	//@RequestMapping(value = "/getOpenid", method = RequestMethod.POST)
-	@RequestMapping(value = "/getOpenid", method = RequestMethod.POST)
-	public ResponseEntity<?> getOpenid(
-			@Param("code") String code, @RequestParam("headurl") String headurl,
-			@RequestParam("nickname") String nickname, @RequestParam("sex") String sex,
-			@RequestParam("country") String country, @RequestParam("province") String province,
-			@RequestParam("city") String city) {
-		
-		/*try {
-			if (StringUtils.isBlank(code)) {
-				System.out.println("code为空");
-			} else {
-				String requestUrl = WX_URL.replace("APPID", WxConfig.APPID).replace("SECRET", WxConfig.APPSECRECT)
-						.replace("JSCODE", code).replace("authorization_code", WxConfig.GRANTTYPE);
-				JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "GET", null);
-				if (jsonObject != null) {
-					try {
-						// 业务操作
-						String openid = jsonObject.getString("openid");
-						wechatService.selectUserByOpenId(openid, headurl, nickname, sex, country, province, city);
-						return openid;
-					} catch (Exception e) {
-						System.out.println("业务操作失败");
-						e.printStackTrace();
-					}
-				} else {
-					System.out.println("code无效");
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}*/
-		JSONObject jb = new JSONObject();
-		jb.put("code", "0");
-		jb.put("token", "undefined");
-		return ResponseEntity.ok(jb);
-	}
-	
-	
-	@ApiOperation(value = "自动登录", notes = "自动登录")
 	@RequestMapping(value = "/autoLogin", method = RequestMethod.POST)
 	//@RequestMapping(value = "/in", method = RequestMethod.POST)
 	public ResponseEntity<?> autoLogin(@RequestBody MemberRequest memberRequest) {
-		//System.out.println("in");
-		//System.out.println(memberRequest.getCode());
-		//System.out.println(memberRequest.toString());
+
 		JSONObject jb = new JSONObject();
 		String wx_url ="https://api.weixin.qq.com/sns/jscode2session";
 		StringBuffer params = new StringBuffer();
@@ -114,6 +66,9 @@ public class ApiMemberController{
 			memberFind.setSex(memberRequest.getSex());
 			memberFind.setStatus(1);
 			memberService.updateById(memberFind);
+			memberFind.setOpenId("");
+			memberFind.setPassword("");
+			memberFind.setUnionId("");
 			jb.put("userInfo", memberFind);
 		}else{
 			Member member = new Member();
@@ -124,9 +79,11 @@ public class ApiMemberController{
 			member.setPermissionsId(1);
 			member.setOpenId(jObject.getString("openid"));
 			memberService.insert(member);
+			member.setOpenId("");
+			member.setPassword("");
+			member.setUnionId("");
 			jb.put("userInfo", member);
 		}
-		System.out.println(memberRequest.toString());
 		
 		jb.put("code", "0");
 		jb.put("status", 1);
@@ -183,7 +140,31 @@ public class ApiMemberController{
 		jb.put("data", addressList);
 		return ResponseEntity.ok(jb);
 	}
-
+	
+	/**
+	 * 我的所有收货地址
+	 */
+	@ApiOperation(value = "获取我的收货地址列表", notes = "获取我的收货地址列表")
+	@RequestMapping(value = "/findMyReceiver", method = { RequestMethod.POST })
+	public   ResponseEntity<?> findMyReceiver(@RequestBody MemberRequest memberRequest) {
+		JSONObject jb = new JSONObject();
+		List<Address> addressList = addressService.findByMemberId(memberRequest.getMemberId());
+		jb.put("data", addressList);
+		return ResponseEntity.ok(jb);
+	}
+	
+	/**
+	 * 我的默认收货地址
+	 */
+	@ApiOperation(value = "获取我的默认收货地址", notes = "获取我的默认收货地址")
+	@RequestMapping(value = "/findMyDefaultReceiver", method = { RequestMethod.POST })
+	public   ResponseEntity<?> findMyDefaultReceiver(@RequestBody MemberRequest memberRequest) {
+		JSONObject jb = new JSONObject();
+		Address address = addressService.findMyDefaultReceive(memberRequest.getMemberId());
+		jb.put("data", address);
+		return ResponseEntity.ok(jb);
+	}
+	
 	/**
 	 * 添加收货地址
 	 */
@@ -191,13 +172,16 @@ public class ApiMemberController{
 	@RequestMapping(value = "/addReceiver", method = { RequestMethod.POST })
 	@ApiImplicitParam(name = "address", value = "收货地址", required = true, dataType = "Address", paramType = "body")
 	public ResponseEntity<?> addReceiver(@RequestBody Address address) {
-		JSONObject jb = new JSONObject();
+		List<Address> aList = addressService.findByMemberId(address.getMemberId());
+		if (ToolUtil.isEmpty(aList)) {
+			address.setIsDefault(1);
+		}
 		boolean num = addressService.insert(address);
 		if (num) {
-			return ResponseEntity.ok(address);
+			return ResponseEntity.ok("添加成功");
 		}
-		jb.put("errorMsg", "添加失败！");
-		return ResponseEntity.ok(jb);
+
+		return ResponseEntity.ok("添加失败");
 	}
 
 	/**
@@ -208,11 +192,11 @@ public class ApiMemberController{
 	@ApiImplicitParam(name = "address", value = "收货地址", required = true, dataType = "Address", paramType = "body")
 	public   ResponseEntity<?> updateReceiver(@RequestBody Address address) {
 		JSONObject jb = new JSONObject();
-		if(address.getIsDefault()){
+		if(address.getIsDefault() == 1){
 			List<Map<String, Object>> addressList = addressService.myReceiver(address.getMemberId(), true, null);
 			if (ToolUtil.isNotEmpty(addressList)) {
 				Address defaultAddress = addressService.selectById(Long.valueOf(String.valueOf(addressList.get(0).get("id"))));
-				defaultAddress.setIsDefault(false);
+				defaultAddress.setIsDefault(0);
 				addressService.update(defaultAddress);
 			}
 		}
@@ -223,6 +207,23 @@ public class ApiMemberController{
 		jb.put("errorMsg", "修改失败！");
 		return ResponseEntity.ok(jb);
 	}
+	
+	/**
+	 * 修改收货地址
+	 */
+	@ApiOperation(value = "修改默认收货地址", notes = "修改我的收货地址")
+	@RequestMapping(value = "/updateDefaultReceiver", method = { RequestMethod.POST })
+	@ApiImplicitParam(name = "address", value = "收货地址", required = true, dataType = "Address", paramType = "body")
+	public   ResponseEntity<?> updateDefaultReceiver(@RequestBody Address address) {
+		Address addre = addressService.selectById(address.getId());
+		if (addre.getMemberId() == address.getMemberId()) {
+			addressService.setDefault(address.getId());
+			return ResponseEntity.ok("修改成功");
+		}
+		
+		return ResponseEntity.ok("修改失败");
+	}
+	
 
 	/**
 	 * 删除收货地址
@@ -230,13 +231,11 @@ public class ApiMemberController{
 	@ApiOperation(value = "删除收货地址", notes = "删除收货地址")
 	@RequestMapping(value = "/deleteReceiver", method = { RequestMethod.POST })
 	public ResponseEntity<?> deleteReceiver(@RequestBody MemberRequest memberRequest) {
-		JSONObject jb = new JSONObject();
 		boolean num = addressService.deleteById(memberRequest.getAddressId());
 		if (num) {
 			return ResponseEntity.ok("成功删除！");
 		}
-		jb.put("errorMsg", "修改失败！");
-		return ResponseEntity.ok(jb);
+		return ResponseEntity.ok("删除失败！");
 	}
 	
 	

@@ -1,5 +1,6 @@
 package com.ljs.guns.rest.modular.cart;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -152,6 +153,7 @@ public class ApiCartController{
 	@ApiOperation(value = "购物车列表", notes = "购物车列表")
 	@RequestMapping(value = "/getCartList", method = RequestMethod.POST)
 	public ResponseEntity<?> getCartList(@RequestBody CartRequest cartRequest) {
+	
 		CartObject cartObject = new CartObject();
 		Cart cart = cartService.findByMemberId(cartRequest.getMemberId());
 		if (ToolUtil.isNotEmpty(cart)) {
@@ -207,7 +209,7 @@ public class ApiCartController{
 				cartObject.setMemberId(cart.getMemberId());
 				cartObject.setQuantity(cart.getQuantity());
 				cartObject.setGoodObjectList(goodList);
-				
+				//System.out.println(cartObject);
 				return ResponseEntity.ok(cartObject);
 			}
 		}

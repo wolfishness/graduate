@@ -46,7 +46,6 @@ public interface IGoodsService extends IService<Goods>{
 	/**
 	 * 获取规格商品
 	 * 
-	 * @param shopIds
 	 * @param categoryId
 	 * @param brandId
 	 * @param goodsName
@@ -64,7 +63,6 @@ public interface IGoodsService extends IService<Goods>{
 	/**
 	 *  通过类目id获取商品分页列表
 	 * @param category 类目
-	 * @param shopId 门店id
 	 * @param index 当前页
 	 * @return
 	 */
@@ -80,7 +78,6 @@ public interface IGoodsService extends IService<Goods>{
 	/**
 	 * 通过商品名称获取商品列表
 	 * @param name
-	 * @param shopId
 	 * @param index
 	 * @return
 	 */

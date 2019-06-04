@@ -42,20 +42,19 @@ public class AccountServiceImpl implements IAccountService {
 	@Resource
 	IProductService productService;
 
-
-	//@Override
-	public Order amount(List<CartItem> cartItems, Address address) {
+	@Override
+	public Order amount(List<CartItem> cartItems, Address address, Long memberId) {
 		// 获取购买清单的价格签
 		Map<Long, PriceTag> priceTags = this.findPriceTag(cartItems);
 		Set<OrderItem> orderItems = new HashSet<>();
+		BigDecimal dueTotal = new BigDecimal(0);
 		BigDecimal actualPrice = new BigDecimal(0);
-		
+
 		for (CartItem cartItem : cartItems) {
 			OrderItem orderItem = new OrderItem();
 			Product product = productService.selectById(cartItem.getProductId());
 			PriceTag priceTag = priceTagService.selectById(cartItem.getPriceTagId());
-			
-			
+
 			orderItem.setGoodsId(product.getGoodsId());
 			orderItem.setProductId(product.getId());
 			orderItem.setActualPrice(priceTag.getMarketPrice());
@@ -64,13 +63,27 @@ public class AccountServiceImpl implements IAccountService {
 			orderItem.setQuantity(cartItem.getQuantity());
 			orderItem.setActualPay(priceTag.getMarketPrice().multiply(new BigDecimal(cartItem.getQuantity())));
 			orderItem.setOriginalPay(priceTag.getPrice().multiply(new BigDecimal(cartItem.getQuantity())));
-			
+
+			dueTotal = dueTotal.add(orderItem.getActualPay());
+			actualPrice = actualPrice.add(orderItem.getOriginalPay());
+
 			orderItems.add(orderItem);
-			
+
 		}
-		
+		Timestamp createTime = new Timestamp(System.currentTimeMillis());
+
 		Order order = new Order();
-		order.set
+		order.setSerial(null);
+		order.setCreateTime(createTime);
+		order.setDue(dueTotal);
+		order.setActualPay(actualPrice);
+		order.setPackages(orderItems.size());
+		order.setMemberId(memberId);
+		order.setConsigneeName(address.getConsigeeName());
+		order.setAddress(address.getAddress());
+		order.setPhoneNum(address.getPhone());
+		order.setOrderItems(orderItems);
+
 		return order;
 	}
 
@@ -96,79 +109,5 @@ public class AccountServiceImpl implements IAccountService {
 		}
 		return priceTags;
 	}
-
-
-	@Override
-	public DeliveryCost getDeliveryCost(DeliveryMode deliveryMode, Address address, Long shopId) {
-		DeliveryCost shopCountyCost = deliveryCostService.getCost(deliveryMode.getId(), address.getCounty(), shopId,
-				null);
-		if (ToolUtil.isNotEmpty(shopCountyCost)) {
-			return shopCountyCost;
-		}
-		DeliveryCost shopCityCost = deliveryCostService.getCost(deliveryMode.getId(), address.getCity(), shopId, null);
-		if (ToolUtil.isNotEmpty(shopCityCost)) {
-			return shopCityCost;
-		}
-		DeliveryCost shopProvinceCost = deliveryCostService.getCost(deliveryMode.getId(), address.getProvince(), shopId,
-				null);
-		if (ToolUtil.isNotEmpty(shopProvinceCost)) {
-			return shopProvinceCost;
-		}
-		DeliveryCost adminCountyCost = deliveryCostService.getCost(deliveryMode.getId(), address.getCounty(),
-				Long.valueOf("0"), null);
-		if (ToolUtil.isNotEmpty(adminCountyCost)) {
-			return adminCountyCost;
-		}
-		DeliveryCost adminCityCost = deliveryCostService.getCost(deliveryMode.getId(), address.getCity(),
-				Long.valueOf("0"), null);
-		if (ToolUtil.isNotEmpty(adminCityCost)) {
-			return adminCityCost;
-		}
-		DeliveryCost adminProvinceCost = deliveryCostService.getCost(deliveryMode.getId(), address.getProvince(),
-				Long.valueOf("0"), null);
-		if (ToolUtil.isNotEmpty(adminProvinceCost)) {
-			return adminProvinceCost;
-		}
-		return null;
-	}
-
-	public Order deliverySattlement(Order order, DeliveryMode deliveryMode, Address address, Long shopId) {
-		// 获取配送费对象
-		DeliveryCost deliveryCost = this.getDeliveryCost(deliveryMode, address, shopId);
-		// 计算出订单的总重量
-		for (OrderItem orderItem : order.getOrderItems()) {
-			Product product = productService.findById(orderItem.getProductId());
-			order.setWeight(order.getWeight().add(product.getWeight().multiply(new BigDecimal(orderItem.getQuantity())))
-					.setScale(2, BigDecimal.ROUND_HALF_UP));
-		}
-		if (ToolUtil.isNotEmpty(deliveryCost)) {
-			// 计算运费
-			if (order.getWeight().compareTo(deliveryCost.getYkg()) <= 0 || ToolUtil.isNotEmpty(deliveryCost.getYkg())
-					|| deliveryCost.getYkg().equals(0) || deliveryCost.getYkg().compareTo(new BigDecimal(0)) == 0) {
-				order.setDiliveryPay(deliveryCost.getStartPrice());
-			} else {
-				BigDecimal overstepWeight = order.getWeight().subtract(deliveryCost.getYkg());
-				if (deliveryCost.getAddedWeight().compareTo(new BigDecimal(0)) > 0) {
-					BigDecimal overStepPrice = new BigDecimal(
-							Math.ceil(overstepWeight.divide(deliveryCost.getAddedWeight()).doubleValue()))
-									.multiply(deliveryCost.getAddedPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
-					order.setDiliveryPay(deliveryCost.getStartPrice().add(overStepPrice));
-				} else {
-					order.setDiliveryPay(deliveryCost.getStartPrice());
-				}
-			}
-			order.setActualPay(order.getDue().add(order.getDiliveryPay()));
-		} else {
-			DeliveryMode mode = deliveryModeService.getById(deliveryMode.getId());
-			order.setDiliveryPay(mode.getPrice());
-			order.setActualPay(order.getDue().add(order.getDiliveryPay()));
-		}
-		order.setConsigneeName(address.getConsigeeName());
-		order.setAddress(address.getAddressName() + address.getDetail());
-		order.setPhoneNum(address.getPhone());
-		order.setDiliveryId(deliveryMode.getId());
-		return order;
-	}
-
 
 }

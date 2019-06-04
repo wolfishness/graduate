@@ -8,9 +8,9 @@ import com.md.member.model.Address;
 
 public interface IAddressService extends IService<Address>{
 
-	List<Map<String, Object>> findByMemberId(Long memberId);
+	List<Address> findByMemberId(Long memberId);
 
-	void add(Address address);
+	boolean insert(Address address);
 
 	void update(Address address);
 
@@ -19,5 +19,7 @@ public interface IAddressService extends IService<Address>{
 	void setDefault(Long addressId);
 
 	List<Map<String, Object>> myReceiver(Long memberId, boolean isdefault, Long addressId);
+
+	Address findMyDefaultReceive(Long memberId);
 
 }

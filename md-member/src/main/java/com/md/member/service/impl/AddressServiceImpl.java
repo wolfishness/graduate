@@ -24,16 +24,25 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
 	AddressMapper addressMapper;
 	
 	@Override
-	public List<Map<String, Object>> findByMemberId(Long memberId) {
+	public List<Address> findByMemberId(Long memberId) {
 		Wrapper<Address> wrapper = new EntityWrapper<>();
 		wrapper.eq("memberId", memberId);
-		List<Map<String, Object>> selectMaps = addressMapper.selectMaps(wrapper);
-		return selectMaps;
+		return addressMapper.selectList(wrapper);
 	}
 	
 	@Override
-	public void add(Address address) {
-		addressMapper.insert(address);
+	public boolean insert(Address address) {
+		Address address2  = addressMapper.selectOne(address);
+		if (ToolUtil.isNotEmpty(address2)) {
+			return true;
+		}else{
+			int num = addressMapper.insert(address);
+			if (num > 0) {
+				return true;
+			}
+			return false;
+		}
+		
 	}
 
 	@Override
@@ -52,16 +61,16 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
 		// 将该用户的其他默认地址设为false
 		Wrapper<Address> wrapper = new EntityWrapper<>();
 		wrapper.eq("memberId", address.getMemberId());
-		wrapper.eq("isdefault", true);
+		wrapper.eq("isDefault", 1);
 		List<Address> selectList = addressMapper.selectList(wrapper);
 		if (selectList != null) {
 			for (Address oldAddress : selectList) {
-				oldAddress.setIsDefault(false);
-				this.update(oldAddress);
+				oldAddress.setIsDefault(0);
+				addressMapper.updateById(oldAddress);
 			}
 		}
 		// 将该地址的是否是默认地址，设为true
-		address.setIsDefault(true);
+		address.setIsDefault(1);
 		this.update(address);
 	}
 
@@ -77,5 +86,14 @@ public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> impl
 			wrapper.eq("isdefault", isdefault);
 		}
 		return addressMapper.selectMaps(wrapper);
+	}
+	
+	@Override
+	public Address findMyDefaultReceive(Long memberId){
+		Address address = new Address();
+		address.setMemberId(memberId);
+		address.setIsDefault(1);
+
+		return addressMapper.selectOne(address);
 	}
 }

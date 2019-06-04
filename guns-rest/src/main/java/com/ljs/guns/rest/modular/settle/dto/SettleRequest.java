@@ -1,8 +1,6 @@
 package com.ljs.guns.rest.modular.settle.dto;
 
-import java.util.List;
-
-import com.md.cart.model.CartItem;
+import com.md.member.model.Address;
 
 public class SettleRequest {
 
@@ -11,6 +9,8 @@ public class SettleRequest {
 	private Long cartId;
 
 	private String cartItemList;
+
+	private Address address;
 
 	public Long getMemberId() {
 		return memberId;
@@ -34,6 +34,20 @@ public class SettleRequest {
 
 	public void setCartItemList(String cartItemList) {
 		this.cartItemList = cartItemList;
+	}
+
+	public Address getAddress() {
+		return address;
+	}
+
+	public void setAddress(Address address) {
+		this.address = address;
+	}
+
+	@Override
+	public String toString() {
+		return "SettleRequest [memberId=" + memberId + ", cartId=" + cartId + ", cartItemList=" + cartItemList
+				+ ", address=" + address + "]";
 	}
 
 }

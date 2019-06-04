@@ -10,8 +10,6 @@
 		<result column="weight" property="weight" />
 		<result column="marketPrice" property="marketPrice" />
 		<result column="price" property="price" />
-		<result column="barcode" property="barcode" />
-		<result column="specItems" property="specItems" />
 		<result column="image" property="image" />
 		<result column="goodsCode" property="goodsCode" />
 		<result column="goodsSize" property="goodsSize" />

@@ -20,7 +20,7 @@ public class Address {
 	// 所属用户
 	private Long memberId;
 	// 是否默认
-	private Boolean isDefault;
+	private int isDefault;
 
 	public Long getId() {
 		return id;
@@ -62,11 +62,11 @@ public class Address {
 		this.memberId = memberId;
 	}
 
-	public Boolean getIsDefault() {
+	public int getIsDefault() {
 		return isDefault;
 	}
 
-	public void setIsDefault(Boolean isDefault) {
+	public void setIsDefault(int isDefault) {
 		this.isDefault = isDefault;
 	}
 

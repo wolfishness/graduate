@@ -92,7 +92,7 @@ public class PriceTagServiceImpl extends ServiceImpl<PriceTagMapper, PriceTag> i
 		PriceTag priceTag = new PriceTag();
 		priceTag.setProductId(productId);
 		PriceTag tag = priceTagMapper.selectOne(priceTag);
-		tag.setInventory(amount);
+		tag.setInventory(tag.getInventory() + amount);
 		edit(tag);
 	}
 	
@@ -101,7 +101,7 @@ public class PriceTagServiceImpl extends ServiceImpl<PriceTagMapper, PriceTag> i
 		PriceTag priceTag = new PriceTag();
 		priceTag.setProductId(productId);
 		PriceTag tag = priceTagMapper.selectOne(priceTag);
-		tag.setInventory(amount);
+		tag.setInventory(tag.getInventory() - amount);
 
 		edit(tag);
 		return tag;

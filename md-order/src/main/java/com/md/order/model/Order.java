@@ -18,7 +18,7 @@ public class Order {
 	@TableId(value = "id", type = IdType.AUTO)
 	private Long id;
 	// 流水号
-	private String goodsCode;
+	private String serial;
 	// 日期
 	private Timestamp createTime;
 	// 确认收货日期
@@ -35,17 +35,8 @@ public class Order {
 	private String payment;
 	// 顾客(顾客对象id)
 	private Long memberId;
-	// 会员卡号
-	private String vipCardId;
-	// 开票号
-	private Long billId;
 	// 配送方式(配送对象)
 	private Long diliveryId;
-	// 使用卡卷
-	private Long couponId;
-	// 使用卡卷名
-	@TableField(exist = false)
-	private String couponName;
 	// 总重量
 	private BigDecimal weight = BigDecimal.ZERO;
 	// 总运费
@@ -60,10 +51,6 @@ public class Order {
 	private String remark;
 	// 状态（待付款、待审核、待发货、待收货、完成、关闭）
 	private Integer status;
-	// 销售员的id
-	private String key;
-	// 销售员的姓名
-	private String caption;
 	// 所属用户
 	@TableField(exist = false)
 	private Member member;
@@ -86,12 +73,12 @@ public class Order {
 		this.id = id;
 	}
 
-	public String getGoodsCode() {
-		return goodsCode;
+	public String getSerial() {
+		return serial;
 	}
 
-	public void setGoodsCode(String goodsCode) {
-		this.goodsCode = goodsCode;
+	public void setSerial(String serial) {
+		this.serial = serial;
 	}
 
 	public Timestamp getCreateTime() {
@@ -158,44 +145,12 @@ public class Order {
 		this.memberId = memberId;
 	}
 
-	public String getVipCardId() {
-		return vipCardId;
-	}
-
-	public void setVipCardId(String vipCardId) {
-		this.vipCardId = vipCardId;
-	}
-
-	public Long getBillId() {
-		return billId;
-	}
-
-	public void setBillId(Long billId) {
-		this.billId = billId;
-	}
-
 	public Long getDiliveryId() {
 		return diliveryId;
 	}
 
 	public void setDiliveryId(Long diliveryId) {
 		this.diliveryId = diliveryId;
-	}
-
-	public Long getCouponId() {
-		return couponId;
-	}
-
-	public void setCouponId(Long couponId) {
-		this.couponId = couponId;
-	}
-
-	public String getCouponName() {
-		return couponName;
-	}
-
-	public void setCouponName(String couponName) {
-		this.couponName = couponName;
 	}
 
 	public BigDecimal getWeight() {
@@ -252,22 +207,6 @@ public class Order {
 
 	public void setStatus(Integer status) {
 		this.status = status;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	public String getCaption() {
-		return caption;
-	}
-
-	public void setCaption(String caption) {
-		this.caption = caption;
 	}
 
 	public Member getMember() {

@@ -125,10 +125,7 @@ public class ApiGoodsController {
 		goodsObject.setMarketPrice(goods.getMarketPrice());
 		goodsObject.setPrice(goods.getPrice());
 		goodsObject.setStock((long) priceTagService.findByGoodsCode(goods.getGoodsCode()).getInventory());
-		goodsObject.setUnit(goods.getUnit());
 		goodsObject.setDetail(goods.getDetail());
-		goodsObject.setParamItems(goods.getParamItems());
-		goodsObject.setSpecItems(goods.getSpecItems());
 		goodsObject.setGoodsCode(goods.getGoodsCode());
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("partData", JSONObject.parse(goodsObject.toString()));
@@ -140,13 +137,13 @@ public class ApiGoodsController {
 	@RequestMapping(value = "/getProductList", method = RequestMethod.POST)
 	public ResponseEntity<?> getProductList(@RequestBody GoodsRequest goodsRequest) {
 		JSONObject jb = new JSONObject();
-		Goods goods = goodsService.selectById(goodsRequest.getGoodsId());
+
 		int count = productService.findColorsNum(goodsRequest.getGoodsId());
 		
 		List<ProductObject> productObList = new ArrayList<>();
 		List<PriceTag> priceTagList = priceTagService.getPriceTagListByGoodsId(goodsRequest.getGoodsId());
 		Set<String> colors = new HashSet<>();
-		JSONObject jObject = new JSONObject();
+
 		JSONArray jArray = new JSONArray();//颜色
 		
 		for(int i = 0 ; i< count ; i++){
@@ -180,27 +177,7 @@ public class ApiGoodsController {
 			jArray.add(jsonObject);
 		}
 		jb.put("productList", jArray);
-		/*if (priceTagList.size() > 0) {
-			for (PriceTag priceTag : priceTagList) {
-				ProductObject productOb = new ProductObject();
-				Product product = productService.selectById(priceTag.getProductId());
-				productOb.setId(priceTag.getProductId());
-				productOb.setMarketPrice(priceTag.getMarketPrice());
-				productOb.setPrice(priceTag.getPrice());
-				productOb.setStock(priceTag.getInventory());
-				productOb.setSkuName(product.getName());
-				productOb.setImage(product.getImageUrl());
-				productOb.setGoodsSize(priceTag.getGoodsSize());
-				String color = product.getName();// 获取颜色
 
-				colors.add(color);
-				productObList.add(productOb);
-			}
-		}
-		jb.put("speList", JSONObject.parse(goods.getSpecItems()));
-		jb.put("colors", colors);
-		jb.put("productList", productObList);
-		System.out.println(jb);*/
 		return ResponseEntity.ok(jb);
 	}
 
@@ -233,26 +210,12 @@ public class ApiGoodsController {
 		JSONObject jb = new JSONObject();
 		GoodsObject goodsOb = new GoodsObject();
 		Goods goods = goodsService.selectById(goodsId);
-		String imageUrl = "";
-		/*if (goods.getImages() != null && !goods.getImages().equals("")) {
-			String[] arr = goods.getImages().split(",");
-			for (int i = 0; i < arr.length; i++) {
-				UploadFile uploadFile = uploadFileService.getById(Long.valueOf(arr[i]));
-				if (uploadFile != null) {
-					imageUrl += uploadFile.getUrl() + ",";
-				}
-			}
-			goodsOb.setImages(imageUrl);
-		}*/
 		goodsOb.setGoodName(goods.getName());
 		goodsOb.setBrandName(brandService.selectById(goods.getBrandId()).getName());
 		goodsOb.setId(goods.getId());
 		goodsOb.setMarketPrice(goods.getMarketPrice());
 		goodsOb.setPrice(goods.getPrice());
 		goodsOb.setStock((long) priceTagService.findByGoodsCode(goods.getGoodsCode()).getInventory());
-		goodsOb.setUnit(goods.getUnit());
-		goodsOb.setParamItems(goods.getParamItems());
-		goodsOb.setSpecItems(goods.getSpecItems());
 		goodsOb.setGoodsCode(goods.getGoodsCode());
 
 		jb.put("goods", goodsOb);
@@ -262,6 +225,7 @@ public class ApiGoodsController {
 	
 
 	public JSONObject judgeInventory(List<Map<String, Object>> goods) {
+		//System.out.println(goods);
 		JSONObject jb = new JSONObject();
 		// 获取系统时间
 		Timestamp d = new Timestamp(System.currentTimeMillis());
@@ -274,7 +238,13 @@ public class ApiGoodsController {
 
 			for (Map<String, Object> map : goods) {
 				PriceTag priceTag = priceTagService.findByGoodsCode(map.get("goodsCode").toString());
+				Product product = productService.selectById(priceTag.getProductId());
+				map.replace("images", product.getImage());
 				map.put("inventory", priceTag.getInventory());
+				map.put("marketPrice", priceTag.getMarketPrice());
+				String sum = orderService.findSumForMonth(Long.parseLong(map.get("id").toString()));
+				map.put("sum", sum);
+				//System.out.println(map);
 				if (ToolUtil.isNotEmpty(priceTag) && priceTag.getInventory() == 0) {
 					LowerGoods lGoods = new LowerGoods();
 					lGoods.setGoodsCode(priceTag.getGoodsCode());
@@ -298,7 +268,6 @@ public class ApiGoodsController {
 				jb.put("errcode", 0);
 				return jb;
 			} catch (Exception e) {
-				// TODO: handle exception
 				jb.put("errmsg", "插入数据失败！" + e.getMessage());
 				jb.put("errcode", -1);
 				return jb;

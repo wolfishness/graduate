@@ -3,11 +3,11 @@ server:
 
 
 #server:
-  #port: 8443 #项目端口
-  #ssl:
-   # key-store: classpath:2131938_www.lujinshan.top.pfx
-   # key-store-password: C2Krt7Wh
-   # key-store-type: PKCS12  
+#  port: 443 #项目端口
+#  ssl: 
+#    key-store: classpath:2131938_www.lujinshan.top.pfx
+#    key-store-password: C2Krt7Wh
+#    key-store-type: PKCS12  
 
 mybatis-plus:
   mapper-locations: classpath*:com/md/**/mapping/*.xml

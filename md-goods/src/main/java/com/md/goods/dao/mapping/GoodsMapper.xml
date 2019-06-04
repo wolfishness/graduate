@@ -9,9 +9,6 @@
 		<result column="name" property="name" />
 		<result column="goodsCode" property="goodsCode" />
 		<result column="brandId" property="brandId" />
-		<result column="unit" property="unit" />
-		<result column="paramItems" property="paramItems" />
-		<result column="specItems" property="specItems" />
 		<result column="images" property="images" />
 		<result column="createTime" property="createTime" />
 		<result column="marketPrice" property="marketPrice" />
@@ -85,6 +82,6 @@
 		SELECT sg.* from shop_goods sg
 		WHERE NOT EXISTS(select slg.id from shop_lower_goods slg where
 		slg.goodsId=sg.id AND slg.goodsCode=sg.goodsCode)
-		and sg.name like CONCAT('%',#{name},'%') GROUP BY sg.id LIMIT #{begin}, 8
+		and sg.name like CONCAT('%',#{name},'%')  LIMIT #{begin}, 8
 	</select>
 </mapper>
