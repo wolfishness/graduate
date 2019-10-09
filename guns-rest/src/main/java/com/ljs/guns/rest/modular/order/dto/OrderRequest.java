@@ -32,6 +32,17 @@ public class OrderRequest {
 	private boolean isCart;
 	// 退款申请id
 	private Long refundApplyId;
+	
+	//处理情况
+	private int dealDetail;
+
+	public int getDealDetail() {
+		return dealDetail;
+	}
+
+	public void setDealDetail(int dealDetail) {
+		this.dealDetail = dealDetail;
+	}
 
 	public Long getOrderId() {
 		return orderId;
@@ -135,6 +146,15 @@ public class OrderRequest {
 
 	public void setRefundApplyId(Long refundApplyId) {
 		this.refundApplyId = refundApplyId;
+	}
+
+	@Override
+	public String toString() {
+		return "OrderRequest [orderId=" + orderId + ", orderItemId=" + orderItemId + ", status=" + status
+				+ ", applyWhy=" + applyWhy + ", memberId=" + memberId + ", index=" + index + ", goodsId=" + goodsId
+				+ ", detail=" + detail + ", level=" + level + ", orderList=" + orderList + ", evaluationList="
+				+ evaluationList + ", isCart=" + isCart + ", refundApplyId=" + refundApplyId + ", dealDetail="
+				+ dealDetail + "]";
 	}
 
 }

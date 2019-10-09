@@ -57,4 +57,8 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemMapper, OrderItem
 		return orderItemMapper.selectMaps(wrapper);
 	}
 	
+	@Override 
+	public String selectRefundStatus(Long orderId) {
+		return orderItemMapper.selectRefundStatus(orderId);
+	}
 }

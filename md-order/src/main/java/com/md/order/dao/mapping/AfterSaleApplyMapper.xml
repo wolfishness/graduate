@@ -15,11 +15,12 @@
 		<result column="status" property="status" />
 		<result column="detail" property="detail" />
 		<result column="createTime" property="createTime" />
-		<result column="manager" property="manager" />
+		<result column="managerId" property="managerId" />
 		<result column="manageTime" property="manageTime" />
 		<result column="payer" property="payer" />
 		<result column="payTime" property="payTime" />
 		<result column="confirm" property="confirm" />
+		
 	</resultMap>
 	
 </mapper>

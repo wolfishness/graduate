@@ -95,6 +95,8 @@ public interface IGoodsService extends IService<Goods>{
 	
 	List<Goods> findBySn(String sn);
 
+	int downGood(Long goodsId);
+
 	 //JSONObject judgeInventory(long shopId, List<Map<String, Object>> goods);
 
 }

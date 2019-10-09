@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.enums.IdType;
  * 退货申请表 by ljs 20190219
  *
  */
-@TableName("shop_afterSale_apply")
+@TableName("shop_aftersale_apply")
 public class AfterSaleApply {
 	/**
 	 * 主键id
@@ -37,7 +37,7 @@ public class AfterSaleApply {
 	// 创建时间
 	private Timestamp createTime;
 	// 处理人
-	private String manager;
+	private Long managerId;
 	// 处理情况
 	private int confirm;
 	// 处理时间
@@ -119,12 +119,14 @@ public class AfterSaleApply {
 		this.createTime = createTime;
 	}
 
-	public String getManager() {
-		return manager;
+
+
+	public Long getManagerId() {
+		return managerId;
 	}
 
-	public void setManager(String manager) {
-		this.manager = manager;
+	public void setManagerId(Long managerId) {
+		this.managerId = managerId;
 	}
 
 	public int getConfirm() {
@@ -163,9 +165,12 @@ public class AfterSaleApply {
 	public String toString() {
 		return "AfterSaleApply [id=" + id + ", orderId=" + orderId + ", orderItemId=" + orderItemId + ", goodsCode="
 				+ goodsCode + ", refundQuantity=" + refundQuantity + ", refundAmount=" + refundAmount + ", status="
-				+ status + ", detail=" + detail + ", createTime=" + createTime + ", manager=" + manager + ", confirm="
-				+ confirm + ", manageTime=" + manageTime + ", payer=" + payer + ", payTime=" + payTime + "]";
+				+ status + ", detail=" + detail + ", createTime=" + createTime + ", managerId=" + managerId
+				+ ", confirm=" + confirm + ", manageTime=" + manageTime + ", payer=" + payer + ", payTime=" + payTime
+				+ "]";
 	}
+
+
 
 	
 }

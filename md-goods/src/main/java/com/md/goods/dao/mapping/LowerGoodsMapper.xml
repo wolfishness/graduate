@@ -11,5 +11,6 @@
 		<result column="priority" property="priority" />
 		<result column="creator" property="creator" />
 		<result column="createTime" property="createTime" />
+		<result column="memberId" property="memberId" />
 	</resultMap>
 </mapper>

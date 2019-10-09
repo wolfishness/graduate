@@ -15,4 +15,6 @@ public interface IAfterSaleApplyService extends IService<AfterSaleApply>{
 
 	void edit(AfterSaleApply afterSaleApply);
 
+	AfterSaleApply findInAfterSale(Long orderId, Long orderItemId);
+
 }

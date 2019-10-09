@@ -33,6 +33,7 @@ import com.md.goods.model.Product;
 import com.md.goods.service.IGoodsService;
 import com.md.goods.service.IPriceTagService;
 import com.md.goods.service.IProductService;
+import com.md.member.model.Member;
 import com.md.member.service.IMemberService;
 import com.md.order.constant.OrderStatus;
 import com.md.order.model.AfterSaleApply;
@@ -135,6 +136,7 @@ public class ApiOrderController {
 					map.put("image", product.getImage());
 					map.put("skuName", product.getName());
 					map.put("goodsSize", product.getGoodsSize());
+					
 				}
 				order.setItemObject(itemResult);
 			}
@@ -158,6 +160,16 @@ public class ApiOrderController {
 					map.put("image", product.getImage());
 					map.put("skuName", product.getName());
 					map.put("goodsSize", product.getGoodsSize());
+
+					if(orderRequest.getStatus() == 9){
+
+						AfterSaleApply afterSaleApply = afterSaleApplyService.findInAfterSale(order.getId(), Long.parseLong(map.get("id").toString()));
+
+						
+						if (ToolUtil.isNotEmpty(afterSaleApply)) {
+							map.put("afterSaleId", afterSaleApply.getId());
+						}
+					}
 				}
 				order.setItemObject(itemResult);
 			}
@@ -390,17 +402,71 @@ public class ApiOrderController {
 	}
 	
 	
+	
 	@ApiOperation(value = "售后处理单处理", notes = "售后处理单处理")
 	@RequestMapping(value = "/updateAfterSaleApply", method = RequestMethod.POST)
 	@ResponseBody
 	public ResponseEntity<?> updateAfterSaleApply(@RequestBody OrderRequest orderRequest) {
-		
+		System.out.println(orderRequest.toString());
 		AfterSaleApply afterSaleApply = null;
 		JSONObject jb = new JSONObject();
 		Date date = new Date();       
 		Timestamp manageTime = new Timestamp(date.getTime());
 		
-		return ResponseEntity.ok(null);
+		try {
+			
+			afterSaleApply = afterSaleApplyService.findOne(orderRequest.getRefundApplyId());
+			
+			OrderItem orderItem = orderItemService.selectById(afterSaleApply.getOrderItemId());
+			//更新明细表状态标识
+			orderItem.setRefundStatus(1);
+			
+			//更新售后申请单确认状态
+			afterSaleApply.setConfirm(orderRequest.getDealDetail());
+			if (orderRequest.getDealDetail() == 1) {
+				// 更新明细表状态标识
+				orderItem.setRefundAmount(orderItem.getRefundAmount().add(afterSaleApply.getRefundAmount()));
+				orderItem.setRefundQuantity(orderItem.getRefundQuantity() + afterSaleApply.getRefundQuantity());
+				
+			}
+			
+			orderItemService.updateById(orderItem);
+			
+			//更新售后申请单标识
+			afterSaleApply.setStatus(1);
+
+			afterSaleApply.setManagerId(orderRequest.getMemberId());
+			afterSaleApply.setManageTime(manageTime);
+			
+			afterSaleApplyService.updateById(afterSaleApply);
+			//更新主表退货状态标识
+			Order order = orderService.selectById(afterSaleApply.getOrderId());
+			
+			String status = orderItemService.selectRefundStatus(afterSaleApply.getOrderId());
+			if ("1".equals(status)) {
+				order.setRefundStatus(3);
+			}else {
+				order.setRefundStatus(1);
+			}
+			if (order.getStatus() == 9 && orderRequest.getDealDetail() == 1) {
+				order.setStatus(10);
+			}else{
+				
+			}
+			orderService.updateById(order);
+			
+			jb.put("data", afterSaleApply);
+			jb.put("errcode", 0);
+			jb.put("errmsg", "0");
+			return ResponseEntity.ok(jb);
+		} catch (Exception e) {
+			e.printStackTrace();
+			jb.put("data", "error");
+			jb.put("errcode", -1);
+			jb.put("errmsg", "查无此售后申请单");
+			return ResponseEntity.ok(jb);
+		}
+
 	}
 
 

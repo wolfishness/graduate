@@ -12,6 +12,8 @@ public class GoodsRequest {
 	private Long tagId;
 
 	private Long priceTagId;
+	
+	private Long memberId;
 
 	public Long getCateId() {
 		return cateId;
@@ -59,6 +61,14 @@ public class GoodsRequest {
 
 	public void setPriceTagId(Long priceTagId) {
 		this.priceTagId = priceTagId;
+	}
+
+	public Long getMemberId() {
+		return memberId;
+	}
+
+	public void setMemberId(Long memberId) {
+		this.memberId = memberId;
 	}
 
 	@Override

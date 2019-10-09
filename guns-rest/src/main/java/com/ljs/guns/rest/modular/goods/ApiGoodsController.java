@@ -222,6 +222,36 @@ public class ApiGoodsController {
 		return jb;
 	}
 	
+	@ApiOperation(value = "商品下架", notes = "商品下架")
+	@RequestMapping(value = "/downGoods", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseEntity<?> downGoods(@RequestBody GoodsRequest goodsRequest) {
+		
+		
+		
+		Goods goods = goodsService.selectById(goodsRequest.getGoodsId());
+		Timestamp createTime = new Timestamp(System.currentTimeMillis());
+		
+		
+		LowerGoods lowerGoods = new LowerGoods();
+		lowerGoods.setCreateTime(createTime);
+		
+		lowerGoods.setGoodsCode(goods.getGoodsCode());
+		lowerGoods.setGoodsId(goods.getId());
+		lowerGoods.setMemberId(goodsRequest.getMemberId());
+		
+		lowerGoodsService.insert(lowerGoods);
+		int result = goodsService.downGood(goodsRequest.getGoodsId());
+		if (result == 1) {
+			return ResponseEntity.ok("ok");
+		}
+		else{
+			return ResponseEntity.ok("false");
+		}
+		
+		
+		
+	}
 	
 
 	public JSONObject judgeInventory(List<Map<String, Object>> goods) {

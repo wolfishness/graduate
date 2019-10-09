@@ -156,5 +156,12 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
 		}
 		return goodsList;
 	}
+	
+	@Override
+	public int downGood(Long goodsId){
+		Goods goods = goodsMapper.selectById(goodsId);
+		goods.setDel(true);
+		return goodsMapper.updateById(goods);
+	}
 
 }
