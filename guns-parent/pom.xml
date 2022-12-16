@@ -46,7 +46,7 @@
 		<mysql-connector-java.version>5.1.38</mysql-connector-java.version>
 		<jwt.version>0.7.0</jwt.version>
 		<flowable.version>6.2.0</flowable.version>
-		<hutool.version>4.0.0</hutool.version>
+		<hutool.version>5.8.10</hutool.version>
 		<aliyuncore.version>3.3.1</aliyuncore.version>
 		<aliyundysmsapi.version>1.0.0</aliyundysmsapi.version>
 	</properties>
